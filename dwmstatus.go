@@ -2,7 +2,6 @@ package main
 
 // #cgo LDFLAGS: -lX11 -lasound
 // #include <X11/Xlib.h>
-// #include "getvol.h"
 import "C"
 
 import (
@@ -12,12 +11,22 @@ import (
 	"net"
 	"strings"
 	"time"
+
+    "github.com/vially/volumectl/pulseaudio"
 )
 
 var dpy = C.XOpenDisplay(nil)
 
-func getVolumePerc() int {
-	return int(C.get_volume_perc())
+func getVolumePerc() string {
+    pa := pulseaudio.New()
+    volume := "";
+    if pa.Muted {
+      volume = "Muted"
+    } else {
+      volume = fmt.Sprintf("%d%%", pa.Volume)
+    }
+
+	return volume
 }
 
 func getBatteryPercentage(path string) (perc int, err error) {
@@ -118,12 +127,13 @@ func main() {
 		if err != nil {
 			log.Println(err)
 		}
-		m, err := nowPlaying("localhost:6600")
-		if err != nil {
-			log.Println(err)
-		}
+//		m, err := nowPlaying("localhost:6600")
+//		if err != nil {
+//			log.Println(err)
+//		}
 		vol := getVolumePerc()
-		s := formatStatus("%s :: %d%% :: %s :: %s :: %d%%", m, vol, l, t, b)
+//		s := formatStatus("%s :: %d%% :: %s :: %s :: %d%%", m, vol, l, t, b)
+		s := formatStatus("%s :: %s :: %s :: %d%%", vol, l, t, b)
 		setStatus(s)
 		time.Sleep(time.Second)
 	}
